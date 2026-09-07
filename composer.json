@@ -1,0 +1,21 @@
+{
+    "name": "carlos/tech-academy3",
+    "description": "Plantera - Forum",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Carlos\\TechAcademy3\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Carlos Periçaro",
+            "email": "carloseduardopb2019@gmail.com"
+        }
+    ],
+    "require": {
+        "tightenco/collect": "^9.52",
+        "nesbot/carbon": "^3.13",
+        "monolog/monolog": "^3.10"
+    }
+}
