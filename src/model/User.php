@@ -1,47 +1,84 @@
 <?php
 
-class UserModel
+declare(strict_types=1);
+namespace Carlos\TechAcademy3\Model;
+
+use Carlos\TechAcademy3\Model\Enum\AccountType;
+use DomainException;
+
+class User
 {
-    private int $id;
+    private ?int $id = null;
     private string $username;
     private string $name;
     private string $email;
     private string $cellphone;
     private string $cpf;
     private string $uf;
-    private int $account_type;
-    private string $password;
+    private AccountType $accountType;
     private string $passwordHash;
 
-
-    /**
-     * Get the value of password
-     */ 
-    public function getPassword(): string
-    {
-        return $this->password;
+    //usar __constructor e nao getters e setters, fere SOLID
+    public function __construct(
+        string $username, 
+        string $name, 
+        string $email, 
+        string $cellphone,
+        string $cpf,
+        string $uf,
+        AccountType $accountType,
+    ){
+        $this->username = $username;
+        $this->name = $name;
+        $this->email = $email;
+        $this->cellphone = $cellphone;
+        $this->cpf = $cpf;
+        $this->uf = $uf;
+        $this->accountType = $accountType;
+        //chjamar as validações aq
+        
     }
 
-    /**
-    * Set the value of password
-     */ 
-    //cadastro, nova senha
-    public function setPassword(string $password): self
-    {
-        $this->password = password_hash($password, PASSWORD_DEFAULT);
+    $hash = password_hash($senha, PASSWORD_DEFAULT, $options);
+    $user->salvarNovaSenha($hash);
 
-        return $this;
+
+    //inserir validação de email, cpf, telefone e outros aqui na classe model
+
+
+    //metodo baseado no stackoverflow ja exisntente
+    private function validateCpf(string $cpf): void{
+    
+    $cpf = preg_replace('/\D/', '', $cpf);
+
+    // Verifica se tem 11 dígitos
+    if (strlen($cpf) != 11) {
+        throw new DomainException("Comprimento do CPF Inválido", 1);
+    }
+    //DomainException utilizado pois viola regra de negocio, e nao é um erro generico
+
+    // Rejeita CPFs com sequências repetidas conhecidas
+    if (preg_match('/(\d)\1{10}/', $cpf)) {
+        throw new DomainException("Formato do CPF Inválido", 1);
     }
 
-    /**
-     * Set the value of passwordHash
-    */ 
-    public function setPasswordHash(string $passwordHash):  self
-    {
-        $this->password = $passwordHash;
-
-        return $this;
+    // Calcula o primeiro dígito verificador
+    for ($t = 9; $t < 11; $t++) {
+        $d = 0;
+        for ($c = 0; $c < $t; $c++) {
+            $d += $cpf[$c] * (($t + 1) - $c);
+        }
+        $d = ((10 * $d) % 11) % 10;
+        if ($cpf[$c] != $d) {
+            throw new DomainException("CPF Inválido", 1);
+        }
     }
+    
+    }
+
+
+    //utilizei a extensao PHP Getters & Setters para fazer os mesmos de forma automatica
+
 
     public function setCellphone(string $cellphone): self
     {
@@ -52,9 +89,9 @@ class UserModel
     /**
      * Get the value of account_type
      */ 
-    public function getAccount_type(): int
+    public function getAccountType(): AccountType
     {
-        return $this->account_type;
+        return $this->accountType;
     }
 
     /**
@@ -62,9 +99,9 @@ class UserModel
      *
      * @return  self
      */ 
-    public function setAccount_type(int $account_type): self
+    public function setAccountType(int $accountType): self
     {
-        $this->account_type = $account_type;
+        $this->accountType = $accountType;
 
         return $this;
     }
@@ -180,7 +217,7 @@ class UserModel
     /**
      * Get the value of id
      */ 
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
