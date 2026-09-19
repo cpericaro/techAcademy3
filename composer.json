@@ -4,7 +4,12 @@
     "type": "project",
     "autoload": {
         "psr-4": {
-            "Carlos\\TechAcademy3\\": "src/"
+            "Carlos\\TechAcademy3\\Model\\Enum\\": "src/model/enum/",
+            "Carlos\\TechAcademy3\\Model\\": "src/model/",
+            "Carlos\\TechAcademy3\\Repository\\": "src/repository/",
+            "Carlos\\TechAcademy3\\Service\\": "src/service/",
+            "Carlos\\TechAcademy3\\Controller\\": "src/controller/",
+            "Carlos\\TechAcademy3\\Config\\": "src/config/"
         }
     },
     "authors": [
