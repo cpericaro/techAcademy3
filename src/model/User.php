@@ -99,6 +99,20 @@ final class User
         $this->passwordHash = self::hashPassword($password);
     }
 
+    public function updateProfile(
+        string $name,
+        string $email,
+        string $cellphone,
+        string $cpf,
+        string $uf,
+    ): void {
+        $this->name = $this->validateRequired($name, 'Nome');
+        $this->email = $this->validateEmail($email);
+        $this->cellphone = $this->normalizeCellphone($cellphone);
+        $this->cpf = $this->normalizeCpf($cpf);
+        $this->uf = $this->normalizeUf($uf);
+    }
+
     // getters e setters
 
     public function verifyPassword(string $password): bool
