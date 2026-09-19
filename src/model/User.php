@@ -1,240 +1,250 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Carlos\TechAcademy3\Model;
 
 use Carlos\TechAcademy3\Model\Enum\AccountType;
 use DomainException;
+use RuntimeException;
 
-class User
+final class User
 {
+    //assim id não vem null pelo constructor
     private ?int $id = null;
-    private string $username;
-    private string $name;
-    private string $email;
-    private string $cellphone;
-    private string $cpf;
-    private string $uf;
-    private AccountType $accountType;
     private string $passwordHash;
 
-    //usar __constructor e nao getters e setters, fere SOLID
-    public function __construct(
-        string $username, 
-        string $name, 
-        string $email, 
+    private function __construct(
+        private string $username,
+        private string $name,
+        private string $email,
+        private string $cellphone,
+        private string $cpf,
+        private string $uf,
+        private AccountType $accountType,
+        string $passwordHash,
+    ) {
+        $this->username = $this->validateRequired($username, 'Nome de usuário');
+        $this->name = $this->validateRequired($name, 'Nome');
+        $this->email = $this->validateEmail($email);
+        $this->cellphone = $this->normalizeCellphone($cellphone);
+        $this->cpf = $this->normalizeCpf($cpf);
+        $this->uf = $this->normalizeUf($uf);
+        $this->passwordHash = self::validatePasswordHash($passwordHash);
+    }
+
+    public static function register(
+        string $username,
+        string $name,
+        string $email,
         string $cellphone,
         string $cpf,
         string $uf,
         AccountType $accountType,
-    ){
-        $this->username = $username;
-        $this->name = $name;
-        $this->email = $email;
-        $this->cellphone = $cellphone;
-        $this->cpf = $cpf;
-        $this->uf = $uf;
-        $this->accountType = $accountType;
-        //chjamar as validações aq
-        
+        string $password,
+    ): self {
+        return new self(
+            $username,
+            $name,
+            $email,
+            $cellphone,
+            $cpf,
+            $uf,
+            $accountType,
+            self::hashPassword($password),
+        );
     }
 
-    $hash = password_hash($senha, PASSWORD_DEFAULT, $options);
-    $user->salvarNovaSenha($hash);
+    public static function fromDatabase(
+        int $id,
+        string $username,
+        string $name,
+        string $email,
+        string $cellphone,
+        string $cpf,
+        string $uf,
+        AccountType $accountType,
+        string $passwordHash,
+    ): self {
+        $user = new self(
+            $username,
+            $name,
+            $email,
+            $cellphone,
+            $cpf,
+            $uf,
+            $accountType,
+            $passwordHash,
+        );
+        $user->assignId($id);
 
-
-    //inserir validação de email, cpf, telefone e outros aqui na classe model
-
-
-    //metodo baseado no stackoverflow ja exisntente
-    private function validateCpf(string $cpf): void{
-    
-    $cpf = preg_replace('/\D/', '', $cpf);
-
-    // Verifica se tem 11 dígitos
-    if (strlen($cpf) != 11) {
-        throw new DomainException("Comprimento do CPF Inválido", 1);
+        return $user;
     }
-    //DomainException utilizado pois viola regra de negocio, e nao é um erro generico
 
-    // Rejeita CPFs com sequências repetidas conhecidas
-    if (preg_match('/(\d)\1{10}/', $cpf)) {
-        throw new DomainException("Formato do CPF Inválido", 1);
-    }
-
-    // Calcula o primeiro dígito verificador
-    for ($t = 9; $t < 11; $t++) {
-        $d = 0;
-        for ($c = 0; $c < $t; $c++) {
-            $d += $cpf[$c] * (($t + 1) - $c);
+    public function assignId(int $id): void
+    {
+        if ($id <= 0) {
+            throw new DomainException('ID de usuário inválido.');
         }
-        $d = ((10 * $d) % 11) % 10;
-        if ($cpf[$c] != $d) {
-            throw new DomainException("CPF Inválido", 1);
+
+        $this->id = $id;
+    }
+
+    public function changePassword(string $password): void
+    {
+        if (strlen($password) < 8) {
+            throw new DomainException('A senha deve ter ao menos 8 caracteres.');
         }
+
+        $this->passwordHash = self::hashPassword($password);
     }
-    
-    }
 
+    // getters e setters
 
-    //utilizei a extensao PHP Getters & Setters para fazer os mesmos de forma automatica
-
-
-    public function setCellphone(string $cellphone): self
+    public function verifyPassword(string $password): bool
     {
-        $this->cellphone = preg_replace('/\D/', '', $cellphone);
-        return $this;
+        return password_verify($password, $this->passwordHash);
     }
 
-    /**
-     * Get the value of account_type
-     */ 
-    public function getAccountType(): AccountType
-    {
-        return $this->accountType;
-    }
-
-    /**
-     * Set the value of account_type
-     *
-     * @return  self
-     */ 
-    public function setAccountType(int $accountType): self
-    {
-        $this->accountType = $accountType;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of cpf
-     */ 
-    public function getCpf(): string
-    {
-        return $this->cpf;
-    }
-
-    /**
-     * Set the value of cpf
-     *
-     * @return  self
-     */ 
-    public function setCpf(string $cpf): self
-    {
-        $this->cpf = $cpf;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of cellphone
-     */ 
-    public function getCellphone(): string
-    {
-        return $this->cellphone;
-    }
-
-    /**
-     * Get the value of email
-     */ 
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
-    /**
-     * Set the value of email
-     *
-     * @return  self
-     */ 
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of name
-     */ 
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    /**
-     * Set the value of name
-     *
-     * @return  self
-     */ 
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of username
-     */ 
-    public function getUsername(): string
-    {
-        return $this->username;
-    }
-
-    /**
-     * Set the value of username
-     *
-     * @return  self
-     */ 
-    public function setUsername(string $username): self
-    {
-        $this->username = $username;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of uf
-     */ 
-    public function getUf(): string
-    {
-        return $this->uf;
-    }
-
-    /**
-     * Set the value of uf
-     *
-     * @return  self
-     */ 
-    public function setUf(string $uf): self
-    {
-        $this->uf = $uf;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of id
-     */ 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * Set the value of id
-     *
-     * @return  self
-     */ 
-    public function setId(int $id): self
+    public function getUsername(): string
     {
-        $this->id = $id;
-
-        return $this;
+        return $this->username;
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
 
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function getCellphone(): string
+    {
+        return $this->cellphone;
+    }
+
+    public function getCpf(): string
+    {
+        return $this->cpf;
+    }
+
+    public function getUf(): string
+    {
+        return $this->uf;
+    }
+
+    public function getAccountType(): AccountType
+    {
+        return $this->accountType;
+    }
+
+    public function getPasswordHash(): string
+    {
+        return $this->passwordHash;
+    }
+
+    private function validateRequired(string $value, string $field): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            throw new DomainException("{$field} é obrigatório.");
+        }
+
+        return $value;
+    }
+
+    private function validateEmail(string $email): string
+    {
+        $email = strtolower(trim($email));
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new DomainException('E-mail inválido.');
+        }
+
+        return $email;
+    }
+
+    private function normalizeCellphone(string $cellphone): string
+    {
+        $cellphone = preg_replace('/\D/', '', $cellphone) ?? '';
+
+        if (!preg_match('/^\d{10,11}$/', $cellphone)) {
+            throw new DomainException('Celular inválido.');
+        }
+
+        return $cellphone;
+    }
+
+    private function normalizeCpf(string $cpf): string
+    {
+        $cpf = preg_replace('/\D/', '', $cpf) ?? '';
+
+        if (strlen($cpf) !== 11 || preg_match('/^(\d)\1{10}$/', $cpf)) {
+            throw new DomainException('CPF inválido.');
+        }
+
+        for ($position = 9; $position < 11; $position++) {
+            $sum = 0;
+
+            for ($index = 0; $index < $position; $index++) {
+                $sum += (int) $cpf[$index] * ($position + 1 - $index);
+            }
+
+            $digit = (10 * $sum) % 11 % 10;
+
+            if ((int) $cpf[$position] !== $digit) {
+                throw new DomainException('CPF inválido.');
+            }
+        }
+
+        return $cpf;
+    }
+
+    private function normalizeUf(string $uf): string
+    {
+        $uf = strtoupper(trim($uf));
+
+        if (!in_array($uf, [
+            'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS',
+            'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
+            'SP', 'SE', 'TO',
+        ], true)) {
+            throw new DomainException('UF inválida.');
+        }
+
+        return $uf;
+    }
+
+    private static function hashPassword(string $password): string
+    {
+        if (strlen($password) < 8) {
+            throw new DomainException('A senha deve ter ao menos 8 caracteres.');
+        }
+
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        if ($hash === false) {
+            throw new RuntimeException('Não foi possível proteger a senha.');
+        }
+
+        return $hash;
+    }
+
+    private static function validatePasswordHash(string $passwordHash): string
+    {
+        if (password_get_info($passwordHash)['algo'] === null) {
+            throw new DomainException('Hash de senha inválido.');
+        }
+
+        return $passwordHash;
+    }
 }
-
-?>
