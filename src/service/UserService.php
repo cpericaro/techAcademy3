@@ -2,8 +2,10 @@
 
 namespace Carlos\TechAcademy3\Service;
 
-use Carlos\TechAcademy3\Model\userModel;
+use Carlos\TechAcademy3\Model\Enum\AccountType;
+use Carlos\TechAcademy3\Model\User;
 use Carlos\TechAcademy3\Repository\UserRepository;
+use DomainException;
 
 class UserService
 {
@@ -20,32 +22,36 @@ class UserService
         string $uf,
         int $accountType,
         string $password
-    ): userModel {
-
-        //regras de negocio
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new \Exception('E-mail inválido');
+    ): User {
+        try {
+            $type = AccountType::from($accountType);
+        } catch (\ValueError) {
+            throw new DomainException('Tipo de conta inválido.');
         }
+
+        $user = User::register(
+            $username,
+            $name,
+            $email,
+            $cellphone,
+            $cpf,
+            $uf,
+            $type,
+            $password,
+        );
+
         if ($this->userRepository->findByEmail($email)) {
-            throw new \Exception('E-mail indisponível');
+            throw new DomainException('E-mail indisponível.');
         }
-        if ($this->userRepository->findByUsername($username)) {
-            throw new \Exception('Nome de usuario indisponivel');
+        if ($this->userRepository->findByUsername($user->getUsername())) {
+            throw new DomainException('Nome de usuário indisponível.');
         }
-        if ($this->userRepository->findByCellphone($cellphone)) {
-            throw new \Exception('Celular indisponivel');
+        if ($this->userRepository->findByCellphone($user->getCellphone())) {
+            throw new DomainException('Celular indisponível.');
         }
-
-        //declaracao do usuario
-        $user = new userModel();
-        $user->setUsername($username)
-             ->setName($name)
-             ->setEmail($email)
-             ->setCellphone($cellphone)
-             ->setCpf($cpf)
-             ->setUf($uf)
-             ->setAccount_type($accountType)
-             ->setPassword($password); // hashed pelo setter
+        if ($this->userRepository->findByCpf($user->getCpf())) {
+            throw new DomainException('CPF indisponível.');
+        }
 
         $this->userRepository->create($user);
 
