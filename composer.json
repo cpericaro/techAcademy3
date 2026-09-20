@@ -10,10 +10,7 @@
             "Carlos\\TechAcademy3\\Service\\": "src/service/",
             "Carlos\\TechAcademy3\\Controller\\": "src/controller/",
             "Carlos\\TechAcademy3\\Config\\": "src/config/"
-        },
-        "classmap": [
-            "src/"
-        ]
+        }
     },
     "authors": [
         {
