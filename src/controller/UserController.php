@@ -41,9 +41,41 @@ final class UserController
                 return;
             }
 
+            if ($method === 'POST' && $action === 'edit') {
+                $user = $this->userService->editAccount(
+                    $this->post('username'),
+                    $this->post('name'),
+                    $this->post('email'),
+                    $this->post('cellphone'),
+                    $this->post('cpf'),
+                    $this->post('uf'),
+                );
+
+                $this->respond(200, ['data' => $this->userData($user)]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'change-password') {
+                $this->userService->changeAccountPassword(
+                    $this->post('username'),
+                    $this->post('currentPassword'),
+                    $this->post('newPassword'),
+                );
+
+                $this->respond(200, ['data' => ['message' => 'Senha alterada com sucesso.']]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'delete') {
+                $this->userService->deleteAccount($this->post('username'));
+
+                $this->respond(200, ['data' => ['message' => 'Conta excluída com sucesso.']]);
+                return;
+            }
+
             $this->respond(400, ['error' => ['message' => 'Ação ou método HTTP inválido.']]);
         } catch (DomainException $exception) {
-            $status = $action === 'show' && $exception->getMessage() === 'Conta não encontrada.'
+            $status = $exception->getMessage() === 'Conta não encontrada.'
                 ? 404
                 : 400;
 
