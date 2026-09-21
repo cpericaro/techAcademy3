@@ -52,13 +52,25 @@ final class SchoolClass
         $this->year = $year;
     }
 
-    public function getId(): ?int { return $this->id; }
-    public function getName(): string { return $this->name; }
-    public function getYear(): int { return $this->year; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getYear(): int
+    {
+        return $this->year;
+    }
 
     private static function required(string $value, string $field): string
     {
         $value = trim($value);
+
         if ($value === '') {
             throw new DomainException("{$field} é obrigatório.");
         }

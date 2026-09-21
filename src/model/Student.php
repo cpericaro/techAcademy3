@@ -28,6 +28,7 @@ final class Student
     {
         $student = new self($name, $birthDate, $registration);
         $student->assignId($id);
+
         if ($classId !== null) {
             $student->assignClass($classId);
         }
@@ -40,6 +41,7 @@ final class Student
         if ($id <= 0) {
             throw new DomainException('ID do aluno inválido.');
         }
+
         $this->id = $id;
     }
 
@@ -55,31 +57,59 @@ final class Student
         if ($classId <= 0) {
             throw new DomainException('Turma inválida.');
         }
+
         $this->classId = $classId;
     }
 
-    public function removeClass(): void { $this->classId = null; }
-    public function getId(): ?int { return $this->id; }
-    public function getName(): string { return $this->name; }
-    public function getBirthDate(): string { return $this->birthDate; }
-    public function getRegistration(): string { return $this->registration; }
-    public function getClassId(): ?int { return $this->classId; }
+    public function removeClass(): void
+    {
+        $this->classId = null;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getBirthDate(): string
+    {
+        return $this->birthDate;
+    }
+
+    public function getRegistration(): string
+    {
+        return $this->registration;
+    }
+
+    public function getClassId(): ?int
+    {
+        return $this->classId;
+    }
 
     private static function required(string $value, string $field): string
     {
         $value = trim($value);
+
         if ($value === '') {
             throw new DomainException("{$field} é obrigatório.");
         }
+
         return $value;
     }
 
     private static function date(string $value): string
     {
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
         if ($date === false || $date->format('Y-m-d') !== $value) {
             throw new DomainException('Data de nascimento inválida.');
         }
+
         return $value;
     }
 }

@@ -22,6 +22,7 @@ final class Lesson
         $this->plannedContent = self::required($plannedContent, 'Conteúdo planejado');
         $this->content = trim($content);
         $this->classId = self::id($classId, 'Turma');
+
         if (!in_array($status, [0, 1], true)) {
             throw new DomainException('Status da aula inválido.');
         }
@@ -36,42 +37,86 @@ final class Lesson
     {
         $lesson = new self($lessonDate, $plannedContent, $content, $classId, $status);
         $lesson->assignId($id);
+
         return $lesson;
     }
 
-    public function assignId(int $id): void { $this->id = self::id($id, 'ID da aula'); }
+    public function assignId(int $id): void
+    {
+        $this->id = self::id($id, 'ID da aula');
+    }
+
     public function update(string $lessonDate, string $plannedContent, string $content, int $status): void
     {
         $this->lessonDate = self::date($lessonDate);
         $this->plannedContent = self::required($plannedContent, 'Conteúdo planejado');
         $this->content = trim($content);
+
         if (!in_array($status, [0, 1], true)) {
             throw new DomainException('Status da aula inválido.');
         }
+
         $this->status = $status;
     }
-    public function getId(): ?int { return $this->id; }
-    public function getLessonDate(): string { return $this->lessonDate; }
-    public function getPlannedContent(): string { return $this->plannedContent; }
-    public function getContent(): string { return $this->content; }
-    public function getStatus(): int { return $this->status; }
-    public function getClassId(): int { return $this->classId; }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getLessonDate(): string
+    {
+        return $this->lessonDate;
+    }
+
+    public function getPlannedContent(): string
+    {
+        return $this->plannedContent;
+    }
+
+    public function getContent(): string
+    {
+        return $this->content;
+    }
+
+    public function getStatus(): int
+    {
+        return $this->status;
+    }
+
+    public function getClassId(): int
+    {
+        return $this->classId;
+    }
 
     private static function id(int $id, string $field): int
     {
-        if ($id <= 0) { throw new DomainException("{$field} inválido."); }
+        if ($id <= 0) {
+            throw new DomainException("{$field} inválido.");
+        }
+
         return $id;
     }
+
     private static function required(string $value, string $field): string
     {
         $value = trim($value);
-        if ($value === '') { throw new DomainException("{$field} é obrigatório."); }
+
+        if ($value === '') {
+            throw new DomainException("{$field} é obrigatório.");
+        }
+
         return $value;
     }
+
     private static function date(string $value): string
     {
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
-        if ($date === false || $date->format('Y-m-d') !== $value) { throw new DomainException('Data da aula inválida.'); }
+
+        if ($date === false || $date->format('Y-m-d') !== $value) {
+            throw new DomainException('Data da aula inválida.');
+        }
+
         return $value;
     }
 }

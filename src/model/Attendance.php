@@ -11,8 +11,11 @@ final class Attendance
 {
     private ?int $id = null;
 
-    private function __construct(private AttendanceStatus $status, private int $studentId, private int $lessonId)
-    {
+    private function __construct(
+        private AttendanceStatus $status,
+        private int $studentId,
+        private int $lessonId,
+    ) {
         if ($studentId <= 0 || $lessonId <= 0) {
             throw new DomainException('Aluno ou aula inválidos.');
         }
@@ -27,17 +30,41 @@ final class Attendance
     {
         $attendance = new self($status, $studentId, $lessonId);
         $attendance->assignId($id);
+
         return $attendance;
     }
 
     public function assignId(int $id): void
     {
-        if ($id <= 0) { throw new DomainException('ID da presença inválido.'); }
+        if ($id <= 0) {
+            throw new DomainException('ID da presença inválido.');
+        }
+
         $this->id = $id;
     }
-    public function updateStatus(AttendanceStatus $status): void { $this->status = $status; }
-    public function getId(): ?int { return $this->id; }
-    public function getStatus(): AttendanceStatus { return $this->status; }
-    public function getStudentId(): int { return $this->studentId; }
-    public function getLessonId(): int { return $this->lessonId; }
+
+    public function updateStatus(AttendanceStatus $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getStatus(): AttendanceStatus
+    {
+        return $this->status;
+    }
+
+    public function getStudentId(): int
+    {
+        return $this->studentId;
+    }
+
+    public function getLessonId(): int
+    {
+        return $this->lessonId;
+    }
 }
