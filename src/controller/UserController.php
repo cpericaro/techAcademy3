@@ -80,7 +80,9 @@ final class UserController
                 : 400;
 
             $this->respond($status, ['error' => ['message' => $exception->getMessage()]]);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            error_log($exception->getMessage());
+
             $this->respond(500, ['error' => ['message' => 'Erro interno do servidor.']]);
         }
     }
