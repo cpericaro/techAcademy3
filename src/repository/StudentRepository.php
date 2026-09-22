@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace Carlos\TechAcademy3\Repository;
 
@@ -18,10 +18,10 @@ final class StudentRepository
     {
         $statement = $this->connection->prepare('INSERT INTO `STUDENT` (`NAME`, `BIRTH_DATE`, `REGISTRATION`, `CLASS_ID`) VALUES (:name, :birth_date, :registration, :class_id)');
         $statement->execute([
-            'name' => $student->getName(),
-            'birth_date' => $student->getBirthDate(),
+            'name'         => $student->getName(),
+            'birth_date'   => $student->getBirthDate(),
             'registration' => $student->getRegistration(),
-            'class_id' => $student->getClassId(),
+            'class_id'     => $student->getClassId(),
         ]);
         $student->assignId((int) $this->connection->lastInsertId());
     }
@@ -35,7 +35,7 @@ final class StudentRepository
 
     public function findAll(): array
     {
-        $rows = $this->connection->query('SELECT `ID`, `NAME`, `BIRTH_DATE`, `REGISTRATION`, `CLASS_ID` FROM `STUDENT` ORDER BY `NAME`')->fetchAll(PDO::FETCH_ASSOC);
+        $rows     = $this->connection->query('SELECT `ID`, `NAME`, `BIRTH_DATE`, `REGISTRATION`, `CLASS_ID` FROM `STUDENT` ORDER BY `NAME`')->fetchAll(PDO::FETCH_ASSOC);
         $students = [];
 
         foreach ($rows as $row) {
@@ -53,7 +53,7 @@ final class StudentRepository
     {
         $statement = $this->connection->prepare('SELECT `ID`, `NAME`, `BIRTH_DATE`, `REGISTRATION`, `CLASS_ID` FROM `STUDENT` WHERE `CLASS_ID` = :class_id ORDER BY `NAME`');
         $statement->execute(['class_id' => $classId]);
-        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $rows     = $statement->fetchAll(PDO::FETCH_ASSOC);
         $students = [];
 
         foreach ($rows as $row) {
@@ -65,6 +65,40 @@ final class StudentRepository
         }
 
         return $students;
+    }
+
+    public function findByUserId(int $userId): array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT `STUDENT`.`ID`, `STUDENT`.`NAME`, `STUDENT`.`BIRTH_DATE`, `STUDENT`.`REGISTRATION`, `STUDENT`.`CLASS_ID`
+             FROM `STUDENT`
+             INNER JOIN `STUDENT_has_USER` ON `STUDENT_has_USER`.`STUDENT_ID` = `STUDENT`.`ID`
+             WHERE `STUDENT_has_USER`.`USER_ID` = :user_id
+             ORDER BY `STUDENT`.`NAME`'
+        );
+        $statement->execute(['user_id' => $userId]);
+
+        $students = [];
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $student = $this->hydrate($row);
+
+            if ($student !== null) {
+                $students[] = $student;
+            }
+        }
+
+        return $students;
+    }
+
+    public function isLinkedToUser(int $studentId, int $userId): bool
+    {
+        $statement = $this->connection->prepare(
+            'SELECT 1 FROM `STUDENT_has_USER` WHERE `STUDENT_ID` = :student_id AND `USER_ID` = :user_id LIMIT 1'
+        );
+        $statement->execute(['student_id' => $studentId, 'user_id' => $userId]);
+
+        return $statement->fetchColumn() !== false;
     }
 
     public function findByRegistration(string $registration): ?Student
@@ -89,14 +123,14 @@ final class StudentRepository
     public function saveUserRelation(StudentUserRelation $relation): void
     {
         $parameters = [
-            'student_id' => $relation->getStudentId(),
-            'user_id' => $relation->getUserId(),
+            'student_id'   => $relation->getStudentId(),
+            'user_id'      => $relation->getUserId(),
             'relationship' => $relation->getRelationship(),
         ];
         $findStatement = $this->connection->prepare('SELECT `STUDENT_ID` FROM `STUDENT_has_USER` WHERE `STUDENT_ID` = :student_id AND `USER_ID` = :user_id');
         $findStatement->execute([
             'student_id' => $relation->getStudentId(),
-            'user_id' => $relation->getUserId(),
+            'user_id'    => $relation->getUserId(),
         ]);
 
         if ($findStatement->fetch(PDO::FETCH_ASSOC) !== false) {
@@ -114,7 +148,7 @@ final class StudentRepository
         $statement->execute(['student_id' => $studentId, 'user_id' => $userId]);
     }
 
-    private function hydrate(array|false $row): ?Student
+    private function hydrate(array | false $row): ?Student
     {
         if ($row === false) {
             return null;

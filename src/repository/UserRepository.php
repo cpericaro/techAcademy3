@@ -54,6 +54,15 @@ final class UserRepository
         return $this->findOneBy('CPF', preg_replace('/\D/', '', $cpf) ?? '');
     }
 
+    public function findById(int $id): ?User
+    {
+        if ($id <= 0) {
+            return null;
+        }
+
+        return $this->findOneBy('ID', (string) $id);
+    }
+
     private function findOneBy(string $column, string $value): ?User
     {
         $statement = $this->connection->prepare(
