@@ -47,6 +47,16 @@ final class StudentService
         return $this->studentRepository->findAll();
     }
 
+    public function listByUser(int $userId): array
+    {
+        return $this->studentRepository->findByUserId($userId);
+    }
+
+    public function isLinkedToUser(int $studentId, int $userId): bool
+    {
+        return $this->studentRepository->isLinkedToUser($studentId, $userId);
+    }
+
     public function update(int $id, string $name, string $birthDate, string $registration): Student
     {
         $student = $this->find($id);
