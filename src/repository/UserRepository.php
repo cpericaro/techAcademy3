@@ -119,11 +119,17 @@ final class UserRepository
 
     public function delete(User $user): void
     {
+        $id = $this->getPersistedId($user);
+        $relationStatement = $this->connection->prepare(
+            'DELETE FROM `STUDENT_has_USER` WHERE `USER_ID` = :user_id'
+        );
+        $relationStatement->execute(['user_id' => $id]);
+
         $statement = $this->connection->prepare(
             'DELETE FROM `USER` WHERE `ID` = :id'
         );
 
-        $statement->execute(['id' => $this->getPersistedId($user)]);
+        $statement->execute(['id' => $id]);
     }
 
     private function getPersistedId(User $user): int

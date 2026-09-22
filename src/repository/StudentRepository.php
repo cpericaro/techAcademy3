@@ -116,6 +116,11 @@ final class StudentRepository
 
     public function delete(Student $student): void
     {
+        $relationStatement = $this->connection->prepare(
+            'DELETE FROM `STUDENT_has_USER` WHERE `STUDENT_ID` = :student_id'
+        );
+        $relationStatement->execute(['student_id' => $student->getId()]);
+
         $statement = $this->connection->prepare('DELETE FROM `STUDENT` WHERE `ID` = :id');
         $statement->execute(['id' => $student->getId()]);
     }
