@@ -19,7 +19,6 @@
         }
     ],
     "require": {
-        "tightenco/collect": "^9.52",
         "nesbot/carbon": "^3.13",
         "monolog/monolog": "^3.10"
     }
