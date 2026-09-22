@@ -1,6 +1,12 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
+
+namespace Carlos\TechAcademy3\Config;
+
+use PDO;
+use PDOException;
+use RuntimeException;
 
 final class Database
 {
@@ -46,5 +52,4 @@ final class Database
     {
         return $this->connection;
     }
-    // https://www.w3schools.com/php/php_mysql_connect.asp
 }

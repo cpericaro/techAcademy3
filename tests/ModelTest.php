@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
 use Carlos\TechAcademy3\Model\Attendance;
 use Carlos\TechAcademy3\Model\ClassSchedule;
 use Carlos\TechAcademy3\Model\Enum\AccountType;

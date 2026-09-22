@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
 use Carlos\TechAcademy3\Repository\ClassRepository;
 use Carlos\TechAcademy3\Repository\LessonRepository;
 use Carlos\TechAcademy3\Repository\StudentRepository;
@@ -47,6 +49,27 @@ function expectDomainException(callable $operation, string $message): void
     throw new RuntimeException($message);
 }
 
+function generateCpf(): string
+{
+    $cpf = '';
+
+    for ($index = 0; $index < 9; $index++) {
+        $cpf .= (string) random_int(0, 9);
+    }
+
+    for ($position = 9; $position < 11; $position++) {
+        $sum = 0;
+
+        for ($index = 0; $index < $position; $index++) {
+            $sum += (int) $cpf[$index] * ($position + 1 - $index);
+        }
+
+        $cpf .= (string) ((10 * $sum) % 11 % 10);
+    }
+
+    return $cpf;
+}
+
 $env = parse_ini_file(__DIR__ . '/../.env');
 $pdo = new PDO("mysql:host={$env['DB_HOST']};dbname={$env['DB_NAME']}", $env['DB_USER'], $env['DB_PASSWORD']);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -58,10 +81,13 @@ try {
     $lessons = new LessonRepository($pdo);
     $users = new UserRepository($pdo);
     $classService = new ClassService($classes, $students);
-    $studentService = new StudentService($students, $classes);
+    $studentService = new StudentService($students, $classes, $users);
     $lessonService = new LessonService($lessons, $classes, $students);
     $userService = new UserService($users);
     $suffix = uniqid();
+    $parentCpf = generateCpf();
+    $secondParentCpf = generateCpf();
+    $teacherCpf = generateCpf();
 
     $class = $classService->create('Teste de Integração', 2026);
     $student = $studentService->create('Aluno de Teste', '2018-01-01', "TEST-{$suffix}", $class->getId());
@@ -105,13 +131,24 @@ try {
     check($classService->find($class->getId())->getYear() === 2027, 'A turma deveria ser atualizada.');
 
     $username = "responsavel-{$suffix}";
-    $user = $userService->createAccount($username, 'Responsável de Teste', "responsavel-{$suffix}@example.com", '11999990000', '52998224725', 'SP', 2, 'senha-segura');
+    $user = $userService->createAccount($username, 'Responsável de Teste', "responsavel-{$suffix}@example.com", '11999990000', $parentCpf, 'SP', 2, 'senha-segura');
+    $secondParent = $userService->createAccount("responsavel-2-{$suffix}", 'Segundo Responsável', "responsavel-2-{$suffix}@example.com", '11955550000', $secondParentCpf, 'SP', 2, 'senha-segura');
+    $teacher = $userService->createAccount("professor-{$suffix}", 'Professor de Teste', "professor-{$suffix}@example.com", '11966660000', $teacherCpf, 'SP', 1, 'senha-segura');
     check($user->verifyPassword('senha-segura'), 'A senha do usuário deveria ser protegida.');
     expectDomainException(
         fn () => $userService->createAccount("tipo-invalido-{$suffix}", 'Tipo Inválido', "tipo-invalido-{$suffix}@example.com", '11977770000', '12345678909', 'SP', 99, 'senha-segura'),
         'Tipo de conta inválido deveria ser rejeitado.',
     );
+    expectDomainException(
+        fn () => $studentService->linkUser($student->getId(), $teacher->getId(), 'Responsável'),
+        'Apenas contas de responsável devem ser vinculadas ao aluno.',
+    );
+    expectDomainException(
+        fn () => $studentService->linkUser($student->getId(), $teacher->getId() + 999999, 'Responsável'),
+        'Usuário inexistente não deve ser vinculado ao aluno.',
+    );
     $studentService->linkUser($student->getId(), $user->getId(), 'Responsável');
+    $studentService->linkUser($student->getId(), $secondParent->getId(), 'Responsável');
     $relationCount = $pdo->prepare('SELECT COUNT(*) FROM `STUDENT_has_USER` WHERE `STUDENT_ID` = :student_id AND `USER_ID` = :user_id');
     $relationCount->execute(['student_id' => $student->getId(), 'user_id' => $user->getId()]);
     check((int) $relationCount->fetchColumn() === 1, 'O usuário deveria ser vinculado ao aluno.');
@@ -142,10 +179,15 @@ try {
         'Senha atual incorreta deveria ser rejeitada.',
     );
 
-    $studentService->unlinkUser($student->getId(), $user->getId());
     $userService->deleteAccount($username);
+    $relationCount->execute(['student_id' => $student->getId(), 'user_id' => $user->getId()]);
+    check((int) $relationCount->fetchColumn() === 0, 'O vínculo deve ser removido ao excluir o usuário.');
+    $userService->deleteAccount($teacher->getUsername());
     $lessonService->delete($lesson->getId());
     $studentService->delete($student->getId());
+    $relationCount->execute(['student_id' => $student->getId(), 'user_id' => $secondParent->getId()]);
+    check((int) $relationCount->fetchColumn() === 0, 'Os vínculos devem ser removidos ao excluir o aluno.');
+    $userService->deleteAccount($secondParent->getUsername());
     $studentService->delete($studentWithoutClass->getId());
     $classService->delete($class->getId());
     check($classes->findById($class->getId()) === null, 'A turma deveria ser excluída.');

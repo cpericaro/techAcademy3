@@ -6,8 +6,10 @@ namespace Carlos\TechAcademy3\Service;
 
 use Carlos\TechAcademy3\Model\Student;
 use Carlos\TechAcademy3\Model\StudentUserRelation;
+use Carlos\TechAcademy3\Model\Enum\AccountType;
 use Carlos\TechAcademy3\Repository\ClassRepository;
 use Carlos\TechAcademy3\Repository\StudentRepository;
+use Carlos\TechAcademy3\Repository\UserRepository;
 use DomainException;
 
 final class StudentService
@@ -15,6 +17,7 @@ final class StudentService
     public function __construct(
         private StudentRepository $studentRepository,
         private ClassRepository $classRepository,
+        private UserRepository $userRepository,
     ) {}
 
     public function create(string $name, string $birthDate, string $registration, ?int $classId): Student
@@ -98,6 +101,15 @@ final class StudentService
     public function linkUser(int $studentId, int $userId, string $relationship): void
     {
         $this->find($studentId);
+        $user = $this->userRepository->findById($userId);
+
+        if ($user === null) {
+            throw new DomainException('Usuário não encontrado.');
+        }
+        if ($user->getAccountType() !== AccountType::PARENT) {
+            throw new DomainException('Apenas responsáveis podem ser vinculados a alunos.');
+        }
+
         $relation = new StudentUserRelation($studentId, $userId, $relationship);
         $this->studentRepository->saveUserRelation($relation);
     }

@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace Carlos\TechAcademy3\Controller;
 
@@ -18,14 +18,16 @@ final class StudentController
         private StudentService $studentService,
         private LessonService $lessonService,
         private AuthenticationService $authenticationService,
-    ) {}
+    ) {
+    }
+
     public function handle(string $method, string $action): void
     {
         try {
             $authenticatedUser = $this->authenticationService->requireAuthenticatedUser();
 
             if ($method === 'GET' && $action === 'my-children') {
-                $user     = $this->authenticationService->requireAccountType(AccountType::PARENT);
+                $user = $this->authenticationService->requireAccountType(AccountType::PARENT);
                 $students = [];
 
                 foreach ($this->studentService->listByUser((int) $user->getId()) as $student) {
@@ -36,7 +38,11 @@ final class StudentController
                 return;
             }
 
-            if ($method === 'GET' && $action === 'show' && $authenticatedUser->getAccountType() === AccountType::PARENT) {
+            if (
+                $method === 'GET'
+                && $action === 'show'
+                && $authenticatedUser->getAccountType() === AccountType::PARENT
+            ) {
                 $student = $this->studentService->find($this->id('id'));
 
                 if (! $this->studentService->isLinkedToUser((int) $student->getId(), (int) $authenticatedUser->getId())) {
@@ -46,7 +52,10 @@ final class StudentController
                 $attendance = [];
 
                 foreach ($this->lessonService->attendanceByStudent($student->getId()) as $item) {
-                    $attendance[] = ['lessonId' => $item->getLessonId(), 'status' => $item->getStatus()->value];
+                    $attendance[] = [
+                        'lessonId' => $item->getLessonId(),
+                        'status' => $item->getStatus()->value,
+                    ];
                 }
 
                 $this->respond(200, ['data' => $this->data($student), 'attendance' => $attendance]);
@@ -66,46 +75,134 @@ final class StudentController
                 return;
             }
             if ($method === 'GET' && $action === 'show') {
-                $student    = $this->studentService->find($this->id('id'));
+                $student = $this->studentService->find($this->id('id'));
                 $attendance = [];
 
                 foreach ($this->lessonService->attendanceByStudent($student->getId()) as $item) {
-                    $attendance[] = ['lessonId' => $item->getLessonId(), 'status' => $item->getStatus()->value];
+                    $attendance[] = [
+                        'lessonId' => $item->getLessonId(),
+                        'status' => $item->getStatus()->value,
+                    ];
                 }
 
                 $this->respond(200, ['data' => $this->data($student), 'attendance' => $attendance]);
                 return;
             }
-            if ($method === 'POST' && $action === 'create') {$student = $this->studentService->create($this->post('name'), $this->post('birthDate'), $this->post('registration'), $this->optionalId('classId'));
-                $this->respond(201, ['data' => $this->data($student)]);return;}
-            if ($method === 'POST' && $action === 'edit') {$student = $this->studentService->update($this->id('id'), $this->post('name'), $this->post('birthDate'), $this->post('registration'));
-                $this->respond(200, ['data' => $this->data($student)]);return;}
-            if ($method === 'POST' && $action === 'assign-class') {$student = $this->studentService->assignClass($this->id('id'), $this->id('classId'));
-                $this->respond(200, ['data' => $this->data($student)]);return;}
-            if ($method === 'POST' && $action === 'remove-class') {$student = $this->studentService->removeClass($this->id('id'));
-                $this->respond(200, ['data' => $this->data($student)]);return;}
-            if ($method === 'POST' && $action === 'link-user') {$this->studentService->linkUser($this->id('id'), $this->id('userId'), $this->post('relationship'));
-                $this->respond(200, ['data' => ['message' => 'Responsável vinculado com sucesso.']]);return;}
-            if ($method === 'POST' && $action === 'unlink-user') {$this->studentService->unlinkUser($this->id('id'), $this->id('userId'));
-                $this->respond(200, ['data' => ['message' => 'Responsável removido com sucesso.']]);return;}
-            if ($method === 'POST' && $action === 'delete') {$this->studentService->delete($this->id('id'));
-                $this->respond(200, ['data' => ['message' => 'Aluno excluído com sucesso.']]);return;}
+
+            if ($method === 'POST' && $action === 'create') {
+                $student = $this->studentService->create(
+                    $this->post('name'),
+                    $this->post('birthDate'),
+                    $this->post('registration'),
+                    $this->optionalId('classId'),
+                );
+
+                $this->respond(201, ['data' => $this->data($student)]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'edit') {
+                $student = $this->studentService->update(
+                    $this->id('id'),
+                    $this->post('name'),
+                    $this->post('birthDate'),
+                    $this->post('registration'),
+                );
+
+                $this->respond(200, ['data' => $this->data($student)]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'assign-class') {
+                $student = $this->studentService->assignClass($this->id('id'), $this->id('classId'));
+
+                $this->respond(200, ['data' => $this->data($student)]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'remove-class') {
+                $student = $this->studentService->removeClass($this->id('id'));
+
+                $this->respond(200, ['data' => $this->data($student)]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'link-user') {
+                $this->studentService->linkUser(
+                    $this->id('id'),
+                    $this->id('userId'),
+                    $this->post('relationship'),
+                );
+
+                $this->respond(200, ['data' => ['message' => 'Responsável vinculado com sucesso.']]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'unlink-user') {
+                $this->studentService->unlinkUser($this->id('id'), $this->id('userId'));
+
+                $this->respond(200, ['data' => ['message' => 'Responsável removido com sucesso.']]);
+                return;
+            }
+
+            if ($method === 'POST' && $action === 'delete') {
+                $this->studentService->delete($this->id('id'));
+
+                $this->respond(200, ['data' => ['message' => 'Aluno excluído com sucesso.']]);
+                return;
+            }
+
             $this->respond(400, ['error' => ['message' => 'Ação ou método HTTP inválido.']]);
-        } catch (DomainException $exception) {$this->respond($this->status($exception), ['error' => ['message' => $exception->getMessage()]]);} catch (Throwable $exception) {error_log($exception->getMessage());
-            $this->respond(500, ['error' => ['message' => 'Erro interno do servidor.']]);}
+        } catch (DomainException $exception) {
+            $this->respond($this->status($exception), ['error' => ['message' => $exception->getMessage()]]);
+        } catch (Throwable $exception) {
+            error_log($exception->getMessage());
+
+            $this->respond(500, ['error' => ['message' => 'Erro interno do servidor.']]);
+        }
     }
+
     private function data(Student $student): array
-    {return ['id' => $student->getId(), 'name' => $student->getName(), 'birthDate' => $student->getBirthDate(), 'registration' => $student->getRegistration(), 'classId' => $student->getClassId()];}
+    {
+        return [
+            'id' => $student->getId(),
+            'name' => $student->getName(),
+            'birthDate' => $student->getBirthDate(),
+            'registration' => $student->getRegistration(),
+            'classId' => $student->getClassId(),
+        ];
+    }
+
     private function post(string $field): string
-    {return is_string($_POST[$field] ?? null) ? $_POST[$field] : '';}
+    {
+        return is_string($_POST[$field] ?? null) ? $_POST[$field] : '';
+    }
+
     private function id(string $field): int
-    {return (int) $this->post($field ?: 'id') ?: (int) ($_GET[$field] ?? 0);}
+    {
+        return (int) $this->post($field ?: 'id') ?: (int) ($_GET[$field] ?? 0);
+    }
+
     private function optionalId(string $field): ?int
-    {$id = $this->id($field);return $id > 0 ? $id : null;}
+    {
+        $id = $this->id($field);
+
+        return $id > 0 ? $id : null;
+    }
+
     private function status(DomainException $exception): int
-    {return match ($exception->getMessage()) {'Autenticação necessária.' => 401, 'Acesso não autorizado.' => 403,     default => str_contains($exception->getMessage(), 'não encontrad') ? 404 : 400};}
+    {
+        return match ($exception->getMessage()) {
+            'Autenticação necessária.' => 401,
+            'Acesso não autorizado.' => 403,
+            default => str_contains($exception->getMessage(), 'não encontrad') ? 404 : 400,
+        };
+    }
+
     private function respond(int $status, array $body): void
-    {http_response_code($status);
+    {
+        http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);}
+        echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    }
 }

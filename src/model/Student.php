@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Carlos\TechAcademy3\Model;
 
-use DateTimeImmutable;
+use Carbon\CarbonImmutable;
 use DomainException;
 
 final class Student
@@ -104,9 +104,13 @@ final class Student
 
     private static function date(string $value): string
     {
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+        try {
+            $date = CarbonImmutable::createFromFormat('!Y-m-d', $value);
+        } catch (\InvalidArgumentException) {
+            throw new DomainException('Data de nascimento inválida.');
+        }
 
-        if ($date === false || $date->format('Y-m-d') !== $value) {
+        if ($date === null || $date->format('Y-m-d') !== $value) {
             throw new DomainException('Data de nascimento inválida.');
         }
 
