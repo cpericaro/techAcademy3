@@ -1,23 +1,36 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace Carlos\TechAcademy3\Controller;
 
+use Carlos\TechAcademy3\Model\Enum\AccountType;
 use Carlos\TechAcademy3\Model\User;
+use Carlos\TechAcademy3\Service\AuthenticationService;
 use Carlos\TechAcademy3\Service\UserService;
 use DomainException;
 use Throwable;
 
 final class UserController
 {
-    public function __construct(private UserService $userService)
-    {
+    public function __construct(
+        private UserService $userService,
+        private AuthenticationService $authenticationService,
+    ) {
     }
 
     public function handle(string $method, string $action): void
     {
         try {
+            $authenticatedUser = $this->authenticationService->requireAuthenticatedUser();
+
+            if (
+                ! in_array($action, ['edit', 'change-password'], true)
+                || $this->post('username') !== $authenticatedUser->getUsername()
+            ) {
+                $this->authenticationService->requireAccountType(AccountType::ADMIN);
+            }
+
             if ($method === 'POST' && $action === 'create') {
                 $user = $this->userService->createAccount(
                     $this->post('username'),
@@ -75,9 +88,12 @@ final class UserController
 
             $this->respond(400, ['error' => ['message' => 'Ação ou método HTTP inválido.']]);
         } catch (DomainException $exception) {
-            $status = $exception->getMessage() === 'Conta não encontrada.'
-                ? 404
-                : 400;
+            $status = match ($exception->getMessage()) {
+                'Conta não encontrada.'    => 404,
+                'Autenticação necessária.' => 401,
+                'Acesso não autorizado.'   => 403,
+                default                    => 400,
+            };
 
             $this->respond($status, ['error' => ['message' => $exception->getMessage()]]);
         } catch (Throwable $exception) {
@@ -100,12 +116,13 @@ final class UserController
     private function userData(User $user): array
     {
         return [
-            'id' => $user->getId(),
-            'username' => $user->getUsername(),
-            'name' => $user->getName(),
-            'email' => $user->getEmail(),
-            'cellphone' => $user->getCellphone(),
-            'uf' => $user->getUf(),
+            'id'          => $user->getId(),
+            'username'    => $user->getUsername(),
+            'name'        => $user->getName(),
+            'email'       => $user->getEmail(),
+            'cellphone'   => $user->getCellphone(),
+            'cpf'         => $user->getCpf(),
+            'uf'          => $user->getUf(),
             'accountType' => $user->getAccountType()->value,
         ];
     }
