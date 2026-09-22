@@ -76,8 +76,9 @@
 
     <article class="form-card">
         <h2>Excluir aluno</h2>
-        <form method="post" data-api-form data-resource="student" data-action="delete" data-confirm="Excluir este aluno? Esta ação não pode ser desfeita.">
+        <form method="post" data-api-form data-resource="student" data-action="delete" data-confirm-name="true">
             <label>ID do aluno <input type="number" name="id" min="1" required></label>
+            <p>Para confirmar, será necessário digitar exatamente o nome do aluno.</p>
             <button class="danger" type="submit">Excluir aluno</button>
         </form>
     </article>

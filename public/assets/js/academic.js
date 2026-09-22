@@ -116,6 +116,26 @@
                     return;
                 }
 
+                if (form.dataset.confirmName === 'true') {
+                    try {
+                        const id = new FormData(form).get('id');
+                        const result = await request(form.dataset.resource, 'show', {
+                            parameters: { id: id },
+                        });
+                        const confirmation = window.prompt(
+                            'Digite exatamente o nome do aluno para confirmar a exclusão: ' + result.data.name
+                        );
+
+                        if (confirmation !== result.data.name) {
+                            showMessage(message, 'O nome informado não confere. Exclusão cancelada.', 'error');
+                            return;
+                        }
+                    } catch (error) {
+                        showMessage(message, error.message, 'error');
+                        return;
+                    }
+                }
+
                 if (submitButton) {
                     submitButton.disabled = true;
                 }
