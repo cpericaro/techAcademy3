@@ -1,5 +1,6 @@
 rubrica.md
 /vendor/
+/bin/composer
 backup/
 /.env
 /.env.*
