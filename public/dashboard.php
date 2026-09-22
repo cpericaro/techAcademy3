@@ -1,20 +1,30 @@
 <?php
-$pageTitle = 'Plantera | Início';
-require __DIR__ . '/includes/header.php';
+
+    declare (strict_types = 1);
+
+    $pageTitle = 'Plantera | Início';
+    require __DIR__ . '/includes/header.php';
 ?>
 
 <section class="page-intro">
     <p class="eyebrow">Gestão escolar</p>
     <h1>Organize o dia a dia da escola.</h1>
-    <p>Use os módulos abaixo para cadastrar, consultar, editar ou excluir os registros do sistema.</p>
+    <p>Escolha um módulo para consultar e manter os registros acadêmicos.</p>
 </section>
 
 <section class="module-grid" aria-label="Módulos do sistema">
-
+    <?php if ($isParent): ?>
+        <article class="module-card">
+            <p class="module-label">Acompanhamento</p>
+            <h2>Meus filhos</h2>
+            <p>Consulte turma, aulas e presenças dos alunos vinculados à sua conta.</p>
+            <a href="child.php">Ver meus filhos</a>
+        </article>
+    <?php else: ?>
     <article class="module-card">
         <p class="module-label">Cadastro</p>
         <h2>Alunos</h2>
-        <p>Registre dados do aluno e associe-o a uma turma.</p>
+        <p>Registre os dados do aluno, a matrícula, a turma e os responsáveis.</p>
         <a href="student.php">Gerenciar alunos</a>
     </article>
 
@@ -31,12 +41,12 @@ require __DIR__ . '/includes/header.php';
         <p>Registre planejamento, conteúdo aplicado e presença.</p>
         <a href="lesson.php">Gerenciar aulas</a>
     </article>
+    <?php endif; ?>
 </section>
 
 <section class="notice" aria-labelledby="how-to-use">
     <h2 id="how-to-use">Como usar</h2>
-    <p>Os formulários enviam os dados diretamente para <code>index.php</code> por <code>POST</code>. Após o envio, a resposta JSON confirma o resultado da operação.</p>
+    <p>As telas consomem a API JSON do sistema e apresentam o resultado em listas e mensagens na própria página.</p>
 </section>
-
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
