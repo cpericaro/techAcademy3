@@ -116,13 +116,32 @@ final class StudentRepository
 
     public function delete(Student $student): void
     {
-        $relationStatement = $this->connection->prepare(
-            'DELETE FROM `STUDENT_has_USER` WHERE `STUDENT_ID` = :student_id'
-        );
-        $relationStatement->execute(['student_id' => $student->getId()]);
+        $startedTransaction = false;
 
-        $statement = $this->connection->prepare('DELETE FROM `STUDENT` WHERE `ID` = :id');
-        $statement->execute(['id' => $student->getId()]);
+        if (!$this->connection->inTransaction()) {
+            $this->connection->beginTransaction();
+            $startedTransaction = true;
+        }
+
+        try {
+            $relationStatement = $this->connection->prepare(
+                'DELETE FROM `STUDENT_has_USER` WHERE `STUDENT_ID` = :student_id'
+            );
+            $relationStatement->execute(['student_id' => $student->getId()]);
+
+            $statement = $this->connection->prepare('DELETE FROM `STUDENT` WHERE `ID` = :id');
+            $statement->execute(['id' => $student->getId()]);
+
+            if ($startedTransaction) {
+                $this->connection->commit();
+            }
+        } catch (\Throwable $exception) {
+            if ($startedTransaction && $this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+
+            throw $exception;
+        }
     }
 
     public function saveUserRelation(StudentUserRelation $relation): void

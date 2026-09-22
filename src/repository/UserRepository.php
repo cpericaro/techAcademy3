@@ -120,16 +120,34 @@ final class UserRepository
     public function delete(User $user): void
     {
         $id = $this->getPersistedId($user);
-        $relationStatement = $this->connection->prepare(
-            'DELETE FROM `STUDENT_has_USER` WHERE `USER_ID` = :user_id'
-        );
-        $relationStatement->execute(['user_id' => $id]);
+        $startedTransaction = false;
 
-        $statement = $this->connection->prepare(
-            'DELETE FROM `USER` WHERE `ID` = :id'
-        );
+        if (!$this->connection->inTransaction()) {
+            $this->connection->beginTransaction();
+            $startedTransaction = true;
+        }
 
-        $statement->execute(['id' => $id]);
+        try {
+            $relationStatement = $this->connection->prepare(
+                'DELETE FROM `STUDENT_has_USER` WHERE `USER_ID` = :user_id'
+            );
+            $relationStatement->execute(['user_id' => $id]);
+
+            $statement = $this->connection->prepare(
+                'DELETE FROM `USER` WHERE `ID` = :id'
+            );
+            $statement->execute(['id' => $id]);
+
+            if ($startedTransaction) {
+                $this->connection->commit();
+            }
+        } catch (\Throwable $exception) {
+            if ($startedTransaction && $this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+
+            throw $exception;
+        }
     }
 
     private function getPersistedId(User $user): int
